@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>http://chamatrina.org.br/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/sobre.php</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/atendimentos.php</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/cursos.php</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/eventos.php</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/vivencias.php</loc>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/galeria.php</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>http://chamatrina.org.br/contato.php</loc>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

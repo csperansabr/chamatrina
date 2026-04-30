@@ -1,0 +1,23 @@
+{
+  "name": "Fraternidade Essência da Chama Trina",
+  "short_name": "Chama Trina",
+  "description": "Espaço de desenvolvimento espiritual com Umbanda, Xamanismo e uso ritualístico da ayahuasca.",
+  "start_url": "/index.php",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
