@@ -8,6 +8,10 @@ function adminHeader(string $titulo, string $paginaAtiva = ''): void {
         'dashboard'   => ['label' => 'Dashboard',    'url' => $base . '/admin/'],
         'eventos'     => ['label' => 'Eventos',       'url' => $base . '/admin/eventos.php'],
         'categorias'  => ['label' => 'Categorias',    'url' => $base . '/admin/categorias.php'],
+        'blog-posts'       => ['label' => 'Blog — Posts',       'url' => $base . '/admin/blog-posts.php'],
+        'blog-categorias'  => ['label' => 'Blog — Categorias',  'url' => $base . '/admin/blog-categorias.php'],
+        'blog-comentarios' => ['label' => 'Blog — Comentários', 'url' => $base . '/admin/blog-comentarios.php'],
+        'anamneses'        => ['label' => 'Anamneses',          'url' => $base . '/admin/anamneses.php'],
     ];
     ?>
 <!DOCTYPE html>

@@ -22,6 +22,11 @@ include __DIR__ . '/../includes/layout-top.php';
 ?>
 
 <div class="container">
+    <?php if (($_GET['msg'] ?? '') === 'senha_ok'): ?>
+        <div class="anamnese-alerta anamnese-alerta-ok" style="max-width:600px;margin:20px auto 0;">
+            Senha alterada com sucesso! Você já está conectado(a).
+        </div>
+    <?php endif; ?>
     <div class="about">
         <h2>Olá, <?= htmlspecialchars(explode(' ', $participante['nome'])[0]) ?></h2>
         <p>Bem-vindo(a) à sua área de participante da Fraternidade Essência da Chama Trina.</p>

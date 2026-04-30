@@ -25,9 +25,12 @@ $url         = $url         ?? BASE_URL;
 <link rel="icon" type="image/png" sizes="512x512" href="/img/ico/android-chrome-512x512.png">
 
 <?php $base = '/'; ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= $base ?>css/style.css">
 <link rel="manifest" href="site.webmanifest">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#06090f">
 
 <!-- Open Graph -->
 <meta property="og:title" content="<?= $title ?>">

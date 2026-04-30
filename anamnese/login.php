@@ -69,7 +69,11 @@ include __DIR__ . '/../includes/layout-top.php';
             </button>
         </form>
 
-        <p style="margin-top:20px;text-align:center;color:#aaa;font-size:14px;">
+        <p style="margin-top:14px;text-align:center;font-size:13px;">
+            <a href="<?= BASE_URL ?>/anamnese/recuperar.php" style="color:#8b5cf6;">Esqueci minha senha</a>
+        </p>
+
+        <p style="margin-top:10px;text-align:center;color:#aaa;font-size:14px;">
             Primeira vez?
             <a href="<?= BASE_URL ?>/anamnese/registro.php" style="color:#25D366;">Crie sua conta</a>
         </p>

@@ -4,7 +4,7 @@
 
     <div class="footer-col">
         <h3>Chama Trina</h3>
-        <p>Desenvolvimento espiritual com consciência e fundamento.</p>
+        <p>Fraternidade Essência da Chama Trina — desenvolvimento espiritual com consciência, fundamento e responsabilidade em Canoas / RS.</p>
     </div>
 
     <div class="footer-col">
@@ -14,28 +14,28 @@
             <li><a href="<?= BASE_URL ?>/sobre.php">Sobre</a></li>
             <li><a href="<?= BASE_URL ?>/vivencias.php">Vivências</a></li>
             <li><a href="<?= BASE_URL ?>/eventos.php">Eventos</a></li>
+            <li><a href="<?= BASE_URL ?>/blog.php">Blog</a></li>
             <li><a href="<?= BASE_URL ?>/galeria.php">Galeria</a></li>
             <li><a href="<?= BASE_URL ?>/contato.php">Contato</a></li>
+            <li><a href="<?= BASE_URL ?>/anamnese/" style="color:var(--violet-lite);">Ficha de Anamnese</a></li>
         </ul>
     </div>
 
     <div class="footer-col">
-	<h4>Contato</h4>
-        <a href="https://wa.me/5551992563279" target="_blank">💬 WhatsApp</a>
-        <br><a href="https://instagram.com/fraternidadechamatrina" target="_blank">📷 Instagram</a>
-        </div>
+        <h4>Contato</h4>
+        <a href="https://wa.me/5551992563279" target="_blank" rel="noopener">💬 WhatsApp</a>
+        <a href="https://instagram.com/fraternidadechamatrina" target="_blank" rel="noopener">📷 Instagram</a>
+    </div>
 
 </div>
 
 <div class="footer-bottom">
-    © <?php echo date('Y'); ?> Fraternidade Essência da Chama Trina • Canoas • RS
+    © <?= date('Y') ?> Fraternidade Essência da Chama Trina &nbsp;·&nbsp; Canoas &nbsp;·&nbsp; RS
 </div>
 
 </footer>
 
-<!-- Botão flutuante -->
-<a href="https://wa.me/5551992563279?text=Olá,%20tenho%20interesse%20nas%20vivências"
-   class="whatsapp-float"
-   target="_blank">
-    <img src="../img/whatsapp.png">
+<a href="https://wa.me/5551992563279?text=Ol%C3%A1%2C%20tenho%20interesse%20nas%20viv%C3%AAncias"
+   class="whatsapp-float" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <img src="<?= BASE_URL ?>/img/whatsapp.png" alt="WhatsApp">
 </a>
