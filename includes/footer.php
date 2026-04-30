@@ -13,7 +13,7 @@
             <li><a href="<?= BASE_URL ?>/index.php">Início</a></li>
             <li><a href="<?= BASE_URL ?>/sobre.php">Sobre</a></li>
             <li><a href="<?= BASE_URL ?>/vivencias.php">Vivências</a></li>
-            <li><a href="<?= BASE_URL ?>/eventos.php">Eventos</a></li>
+            <li><a href="<?= BASE_URL ?>/eventos.php">Agenda</a></li>
             <li><a href="<?= BASE_URL ?>/blog.php">Blog</a></li>
             <li><a href="<?= BASE_URL ?>/galeria.php">Galeria</a></li>
             <li><a href="<?= BASE_URL ?>/contato.php">Contato</a></li>

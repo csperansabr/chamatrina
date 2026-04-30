@@ -8,49 +8,59 @@ $porPag  = 9;
 $offset  = ($pagina - 1) * $porPag;
 
 // Categoria ativa
-$catAtiva = null;
-if ($catSlug) {
-    $stmt = $pdo->prepare("SELECT * FROM blog_categorias WHERE slug = ?");
-    $stmt->execute([$catSlug]);
-    $catAtiva = $stmt->fetch();
-}
+$catAtiva   = null;
+$posts      = [];
+$categorias = [];
+$totalPosts = 0;
+$totalPags  = 1;
 
-// Posts publicados (incluindo agendados que já chegaram na data)
 $wherePost  = "status = 'publicado' OR (status = 'agendado' AND publicado_em <= NOW())";
 $paramsPost = [];
-if ($catAtiva) {
-    $wherePost .= " AND categoria_id = ?";
-    $paramsPost[] = $catAtiva['id'];
-}
 
-$total = $pdo->prepare("SELECT COUNT(*) FROM blog_posts WHERE $wherePost");
-$total->execute($paramsPost);
-$totalPosts = (int)$total->fetchColumn();
-$totalPags  = max(1, (int)ceil($totalPosts / $porPag));
+try {
+    if ($catSlug) {
+        $stmt = $pdo->prepare("SELECT * FROM blog_categorias WHERE slug = ?");
+        $stmt->execute([$catSlug]);
+        $catAtiva = $stmt->fetch();
+    }
+    if ($catAtiva) {
+        $wherePost .= " AND categoria_id = ?";
+        $paramsPost[] = $catAtiva['id'];
+    }
+} catch (\PDOException $e) { $catAtiva = null; }
 
-$sql = "
-    SELECT p.*, c.nome AS cat_nome, c.slug AS cat_slug,
-           u.nome AS autor_nome, u.email AS autor_email,
-           (SELECT COUNT(*) FROM blog_comentarios co
-            WHERE co.post_id = p.id AND co.status = 'aprovado') AS total_comentarios
-    FROM blog_posts p
-    LEFT JOIN blog_categorias c ON c.id = p.categoria_id
-    LEFT JOIN admin_usuarios  u ON u.id = p.autor_id
-    WHERE $wherePost
-    ORDER BY p.publicado_em DESC, p.criado_em DESC
-    LIMIT $porPag OFFSET $offset
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($paramsPost);
-$posts = $stmt->fetchAll();
+try {
+    $total = $pdo->prepare("SELECT COUNT(*) FROM blog_posts WHERE $wherePost");
+    $total->execute($paramsPost);
+    $totalPosts = (int)$total->fetchColumn();
+    $totalPags  = max(1, (int)ceil($totalPosts / $porPag));
 
-$categorias = $pdo->query("
-    SELECT c.*, COUNT(p.id) AS total
-    FROM blog_categorias c
-    LEFT JOIN blog_posts p ON p.categoria_id = c.id
-        AND (p.status = 'publicado' OR (p.status = 'agendado' AND p.publicado_em <= NOW()))
-    GROUP BY c.id HAVING total > 0 ORDER BY c.nome
-")->fetchAll();
+    $sql = "
+        SELECT p.*, c.nome AS cat_nome, c.slug AS cat_slug,
+               u.nome AS autor_nome, u.email AS autor_email,
+               (SELECT COUNT(*) FROM blog_comentarios co
+                WHERE co.post_id = p.id AND co.status = 'aprovado') AS total_comentarios
+        FROM blog_posts p
+        LEFT JOIN blog_categorias c ON c.id = p.categoria_id
+        LEFT JOIN admin_usuarios  u ON u.id = p.autor_id
+        WHERE $wherePost
+        ORDER BY p.publicado_em DESC, p.criado_em DESC
+        LIMIT $porPag OFFSET $offset
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($paramsPost);
+    $posts = $stmt->fetchAll();
+} catch (\PDOException $e) { $posts = []; }
+
+try {
+    $categorias = $pdo->query("
+        SELECT c.*, COUNT(p.id) AS total
+        FROM blog_categorias c
+        LEFT JOIN blog_posts p ON p.categoria_id = c.id
+            AND (p.status = 'publicado' OR (p.status = 'agendado' AND p.publicado_em <= NOW()))
+        GROUP BY c.id HAVING total > 0 ORDER BY c.nome
+    ")->fetchAll();
+} catch (\PDOException $e) { $categorias = []; }
 
 $title       = ($catAtiva ? htmlspecialchars($catAtiva['nome']) . ' — ' : '') . 'Blog — ' . SITE_NAME;
 $description = 'Artigos, reflexões e notícias da Fraternidade Essência da Chama Trina.';

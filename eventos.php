@@ -2,53 +2,61 @@
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/db.php';
 
-$title       = 'Eventos e Vivências';
-$description = 'Próximos eventos, cerimônias, cursos e vivências da Fraternidade Essência da Chama Trina.';
+// Página dinâmica — impede cache de servidor e browser
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+
+$title       = 'Agenda — Fraternidade Chama Trina';
+$description = 'Acompanhe a agenda de cerimônias, cursos e vivências da Fraternidade Essência da Chama Trina.';
 $url         = BASE_URL . '/eventos.php';
 
 // Filtro por categoria
 $slugFiltro = $_GET['categoria'] ?? '';
 
-// Categorias com ao menos um evento ativo
-$categorias = $pdo->query(
-    "SELECT DISTINCT c.nome, c.slug
-     FROM categorias_eventos c
-     JOIN eventos e ON e.categoria_id = c.id
-     WHERE e.status = 'ativo'
-     ORDER BY c.ordem, c.nome"
-)->fetchAll();
+$categorias = [];
+$futuros    = [];
+$encerrados = [];
 
-// Buscar eventos futuros
+// Monta SQL de futuros com filtro opcional
 $sql    = "SELECT e.*, c.nome AS categoria, c.slug AS cat_slug
            FROM eventos e
            JOIN categorias_eventos c ON c.id = e.categoria_id
            WHERE e.status = 'ativo' AND e.data_evento >= NOW()";
 $params = [];
-
-if ($slugFiltro) {
-    $sql    .= " AND c.slug = ?";
-    $params[] = $slugFiltro;
-}
-
+if ($slugFiltro) { $sql .= " AND c.slug = ?"; $params[] = $slugFiltro; }
 $sql .= " ORDER BY e.data_evento ASC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$futuros = $stmt->fetchAll();
 
-// Buscar eventos encerrados (últimos 6)
-$sqlEnc = "SELECT e.*, c.nome AS categoria
-           FROM eventos e
-           JOIN categorias_eventos c ON c.id = e.categoria_id
-           WHERE (e.status = 'encerrado' OR (e.status = 'ativo' AND e.data_evento < NOW()))";
+// Monta SQL de encerrados com filtro opcional
+$sqlEnc    = "SELECT e.*, c.nome AS categoria
+              FROM eventos e
+              JOIN categorias_eventos c ON c.id = e.categoria_id
+              WHERE (e.status = 'encerrado' OR (e.status = 'ativo' AND e.data_evento < NOW()))";
 $paramsEnc = [];
-if ($slugFiltro) {
-    $sqlEnc    .= " AND c.slug = ?";
-    $paramsEnc[] = $slugFiltro;
-}
+if ($slugFiltro) { $sqlEnc .= " AND c.slug = ?"; $paramsEnc[] = $slugFiltro; }
 $sqlEnc .= " ORDER BY e.data_evento DESC LIMIT 6";
-$stmtEnc = $pdo->prepare($sqlEnc);
-$stmtEnc->execute($paramsEnc);
-$encerrados = $stmtEnc->fetchAll();
+
+// Cada query tem seu próprio try/catch — uma falha não afeta as demais
+try {
+    $categorias = $pdo->query(
+        "SELECT DISTINCT c.nome, c.slug
+         FROM categorias_eventos c
+         JOIN eventos e ON e.categoria_id = c.id
+         WHERE e.status = 'ativo'
+         ORDER BY c.ordem, c.nome"
+    )->fetchAll();
+} catch (\PDOException $e) { $categorias = []; }
+
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $futuros = $stmt->fetchAll();
+} catch (\PDOException $e) { $futuros = []; }
+
+try {
+    $stmtEnc = $pdo->prepare($sqlEnc);
+    $stmtEnc->execute($paramsEnc);
+    $encerrados = $stmtEnc->fetchAll();
+} catch (\PDOException $e) { $encerrados = []; }
 
 include __DIR__ . '/includes/layout-top.php';
 ?>
@@ -56,8 +64,8 @@ include __DIR__ . '/includes/layout-top.php';
 <div class="container">
 
     <div class="about">
-        <h2>Eventos e Vivências</h2>
-        <p>Acompanhe nossa agenda de cerimônias, cursos e encontros. Cada evento é conduzido com responsabilidade, fundamento e muito cuidado.</p>
+        <h2>Agenda</h2>
+        <p>Acompanhe as próximas cerimônias, cursos e encontros da Fraternidade. Cada trabalho é conduzido com responsabilidade, fundamento e muito cuidado.</p>
     </div>
 
     <?php if ($categorias): ?>
@@ -83,23 +91,22 @@ include __DIR__ . '/includes/layout-top.php';
                 <?php endif; ?>
                 <div class="evento-card-body">
                     <div class="evento-card-categoria"><?= htmlspecialchars($e['categoria']) ?></div>
-                    <div class="evento-card-titulo"><?= htmlspecialchars($e['titulo']) ?></div>
-                    <div class="evento-card-data">
-                        📅 <?= date('d \d\e F \d\e Y \à\s H:i', strtotime($e['data_evento'])) ?>h
-                    </div>
-                    <?php if ($e['local_nome']): ?>
-                    <div class="evento-card-local">📍 <?= htmlspecialchars($e['local_nome']) ?></div>
-                    <?php endif; ?>
+                    <h3><?= htmlspecialchars($e['titulo']) ?></h3>
                     <?php if ($e['descricao']): ?>
-                    <div class="evento-card-descricao"><?= nl2br(htmlspecialchars($e['descricao'])) ?></div>
+                    <p class="evento-descricao" id="edesc-<?= $e['id'] ?>"><?= nl2br(htmlspecialchars($e['descricao'])) ?></p>
+                    <button class="evento-ver-mais" onclick="eventoToggle(this,'edesc-<?= $e['id'] ?>')">Ler mais ↓</button>
                     <?php endif; ?>
-                    <?php if ($e['vagas']): ?>
-                    <div style="font-size:13px;color:#fbbf24;margin-bottom:12px;">
-                        Vagas limitadas: <?= $e['vagas'] ?>
+                    <div class="evento-card-meta">
+                        <span>📅 <?= date('d/m/Y', strtotime($e['data_evento'])) ?> às <?= date('H:i', strtotime($e['data_evento'])) ?>h</span>
+                        <?php if ($e['local_nome']): ?>
+                        <span>📍 <?= htmlspecialchars($e['local_nome']) ?></span>
+                        <?php endif; ?>
+                        <?php if ($e['vagas']): ?>
+                        <span style="color:#fbbf24;">🎟 Vagas: <?= $e['vagas'] ?></span>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                     <a href="<?= WHATSAPP ?>?text=Olá,%20tenho%20interesse%20no%20evento:%20<?= urlencode($e['titulo']) ?>"
-                       target="_blank" class="btn whatsapp" style="font-size:14px;padding:10px 16px;display:inline-flex;">
+                       target="_blank" class="btn whatsapp" style="font-size:14px;padding:10px 16px;">
                         Tenho interesse
                     </a>
                 </div>
@@ -107,12 +114,26 @@ include __DIR__ . '/includes/layout-top.php';
         <?php endforeach; ?>
         </div>
     <?php else: ?>
-        <div class="sem-eventos">
-            <p>Nenhum evento programado no momento.</p>
-            <p style="margin-top:10px;font-size:14px;">
-                Fique atento às novidades ou
-                <a href="contato.php" style="color:#25D366;">entre em contato</a> para saber mais.
+        <div class="sem-eventos" style="padding:70px 0 50px;">
+            <div style="font-size:52px;margin-bottom:20px;opacity:0.6;">🔥</div>
+            <h3 style="font-size:20px;font-weight:800;margin-bottom:12px;color:var(--text);">
+                A chama está sendo preparada
+            </h3>
+            <p style="max-width:480px;margin:0 auto 10px;color:var(--text-muted);line-height:1.7;">
+                Nenhum evento está agendado para este momento — mas o fogo não se apaga.
+                Novos trabalhos e cerimônias estão sendo preparados com cuidado e intenção.
             </p>
+            <p style="max-width:440px;margin:0 auto 28px;color:var(--text-dim);font-size:14px;line-height:1.6;">
+                Siga-nos no Instagram ou entre em contato pelo WhatsApp para ser o primeiro a saber quando a próxima vivência for aberta.
+            </p>
+            <div class="actions" style="justify-content:center;margin:0;">
+                <a href="https://wa.me/5551992563279" target="_blank" rel="noopener" class="btn whatsapp">
+                    Avisar-me pelo WhatsApp
+                </a>
+                <a href="https://instagram.com/fraternidadechamatrina" target="_blank" rel="noopener" class="btn btn-ghost">
+                    Seguir no Instagram
+                </a>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -129,11 +150,11 @@ include __DIR__ . '/includes/layout-top.php';
                 <?php endif; ?>
                 <div class="evento-card-body">
                     <div class="evento-card-categoria"><?= htmlspecialchars($e['categoria']) ?></div>
-                    <div class="evento-card-titulo"><?= htmlspecialchars($e['titulo']) ?></div>
-                    <div class="evento-card-data">
-                        <?= date('d/m/Y', strtotime($e['data_evento'])) ?>
+                    <h3><?= htmlspecialchars($e['titulo']) ?></h3>
+                    <div class="evento-card-meta">
+                        <span>📅 <?= date('d/m/Y', strtotime($e['data_evento'])) ?></span>
+                        <span style="color:#f87171;">Encerrado</span>
                     </div>
-                    <span style="font-size:12px;color:#f87171;">Encerrado</span>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -142,5 +163,25 @@ include __DIR__ . '/includes/layout-top.php';
     <?php endif; ?>
 
 </div>
+
+<script>
+// Exibe botão "Ler mais" apenas quando o texto está realmente cortado
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.evento-descricao').forEach(function (el) {
+        if (el.scrollHeight > el.clientHeight + 2) {
+            var btn = el.nextElementSibling;
+            if (btn && btn.classList.contains('evento-ver-mais')) {
+                btn.style.display = 'block';
+            }
+        }
+    });
+});
+
+function eventoToggle(btn, id) {
+    var el = document.getElementById(id);
+    var expandindo = el.classList.toggle('expandida');
+    btn.textContent = expandindo ? 'Ver menos ↑' : 'Ler mais ↓';
+}
+</script>
 
 <?php include __DIR__ . '/includes/layout-bottom.php'; ?>

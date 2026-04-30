@@ -3,14 +3,22 @@ require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/db.php';
 
 // Próximos eventos em destaque (até 3)
-$eventos = $pdo->query("
-    SELECT e.titulo, e.data_evento, c.nome AS categoria
-    FROM eventos e
-    LEFT JOIN categorias_eventos c ON c.id = e.categoria_id
-    WHERE e.status = 'ativo' AND e.data_evento >= NOW()
-    ORDER BY e.data_evento ASC
-    LIMIT 3
-")->fetchAll();
+try {
+    $eventos = $pdo->query("
+        SELECT e.titulo, e.data_evento, c.nome AS categoria
+        FROM eventos e
+        LEFT JOIN categorias_eventos c ON c.id = e.categoria_id
+        WHERE e.status = 'ativo' AND e.data_evento >= NOW()
+        ORDER BY e.data_evento ASC
+        LIMIT 3
+    ")->fetchAll();
+} catch (\PDOException $e) {
+    $eventos = [];
+}
+
+// Página com dados dinâmicos — impede cache
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
 
 $title       = 'Fraternidade Essência da Chama Trina';
 $description = 'Rituais e vivências com as Medicinas da Floresta, Umbanda e práticas xamânicas com fundamento e responsabilidade em Canoas/RS.';
@@ -102,14 +110,14 @@ include __DIR__ . '/includes/layout-top.php';
             <?php endforeach; ?>
         </div>
         <p style="text-align:center;margin-top:10px;">
-            <a href="<?= BASE_URL ?>/eventos.php" class="link-destaque">Ver todos os eventos →</a>
+            <a href="<?= BASE_URL ?>/eventos.php" class="link-destaque">Ver agenda completa →</a>
         </p>
     </div>
     <?php endif; ?>
 
     <!-- LINKS RÁPIDOS -->
     <div class="actions" style="margin:50px 0 20px;">
-        <a class="btn btn-primary" href="<?= BASE_URL ?>/eventos.php">Ver eventos</a>
+        <a class="btn btn-primary" href="<?= BASE_URL ?>/eventos.php">Ver agenda</a>
         <a class="btn btn-ghost" href="<?= BASE_URL ?>/blog.php">Ler o blog</a>
         <a class="btn whatsapp" href="https://instagram.com/fraternidadechamatrina" target="_blank" rel="noopener">
             <img src="<?= BASE_URL ?>/img/instagram.png" class="icon" alt=""> Instagram

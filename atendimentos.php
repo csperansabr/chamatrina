@@ -74,7 +74,7 @@ include __DIR__ . '/includes/layout-top.php';
         <p>Entre em contato pelo WhatsApp ou pelo formulário e nossa equipe retornará para combinar data, horário e modalidade.</p>
         <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; margin-top:1rem;">
             <a href="<?= WHATSAPP ?>" target="_blank" class="btn whatsapp">Agendar pelo WhatsApp</a>
-            <a href="contato.php" class="btn">Formulário de Contato</a>
+            <a href="<?= BASE_URL ?>/contato.php" class="btn btn-ghost">Formulário de Contato</a>
         </div>
     </div>
 

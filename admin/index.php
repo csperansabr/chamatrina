@@ -5,15 +5,23 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/layout.php';
 
 // Stats
-$totalEventos  = $pdo->query("SELECT COUNT(*) FROM eventos WHERE status = 'ativo'")->fetchColumn();
-$totalCats     = $pdo->query("SELECT COUNT(*) FROM categorias_eventos")->fetchColumn();
-$proximosEvts  = $pdo->query(
-    "SELECT e.titulo, e.data_evento, c.nome AS categoria
-     FROM eventos e
-     JOIN categorias_eventos c ON c.id = e.categoria_id
-     WHERE e.status = 'ativo' AND e.data_evento >= NOW()
-     ORDER BY e.data_evento ASC LIMIT 5"
-)->fetchAll();
+$totalEventos = 0;
+$totalCats    = 0;
+$proximosEvts = [];
+
+try {
+    $totalEventos = $pdo->query("SELECT COUNT(*) FROM eventos WHERE status = 'ativo'")->fetchColumn();
+    $totalCats    = $pdo->query("SELECT COUNT(*) FROM categorias_eventos")->fetchColumn();
+    $proximosEvts = $pdo->query(
+        "SELECT e.titulo, e.data_evento, c.nome AS categoria
+         FROM eventos e
+         JOIN categorias_eventos c ON c.id = e.categoria_id
+         WHERE e.status = 'ativo' AND e.data_evento >= NOW()
+         ORDER BY e.data_evento ASC LIMIT 5"
+    )->fetchAll();
+} catch (\PDOException $e) {
+    // Tabelas ainda não criadas — dashboard exibe zeros
+}
 
 adminHeader('Dashboard', 'dashboard');
 ?>

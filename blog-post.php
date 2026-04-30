@@ -8,50 +8,60 @@ if (!$slug) {
     exit;
 }
 
-$stmt = $pdo->prepare("
-    SELECT p.*, c.nome AS cat_nome, c.slug AS cat_slug,
-           u.nome AS autor_nome, u.email AS autor_email
-    FROM blog_posts p
-    LEFT JOIN blog_categorias c ON c.id = p.categoria_id
-    LEFT JOIN admin_usuarios  u ON u.id = p.autor_id
-    WHERE p.slug = ?
-      AND (p.status = 'publicado' OR (p.status = 'agendado' AND p.publicado_em <= NOW()))
-    LIMIT 1
-");
-$stmt->execute([$slug]);
-$post = $stmt->fetch();
+$post        = null;
+$comentarios = [];
+$relacionados = [];
+
+try {
+    $stmt = $pdo->prepare("
+        SELECT p.*, c.nome AS cat_nome, c.slug AS cat_slug,
+               u.nome AS autor_nome, u.email AS autor_email
+        FROM blog_posts p
+        LEFT JOIN blog_categorias c ON c.id = p.categoria_id
+        LEFT JOIN admin_usuarios  u ON u.id = p.autor_id
+        WHERE p.slug = ?
+          AND (p.status = 'publicado' OR (p.status = 'agendado' AND p.publicado_em <= NOW()))
+        LIMIT 1
+    ");
+    $stmt->execute([$slug]);
+    $post = $stmt->fetch();
+} catch (\PDOException $e) {
+    $post = null;
+}
 
 if (!$post) {
-    header('HTTP/1.0 404 Not Found');
     header('Location: ' . BASE_URL . '/blog.php');
     exit;
 }
 
-// Comentários aprovados
-$comentarios = $pdo->prepare("
-    SELECT * FROM blog_comentarios
-    WHERE post_id = ? AND status = 'aprovado'
-    ORDER BY criado_em ASC
-");
-$comentarios->execute([$post['id']]);
-$comentarios = $comentarios->fetchAll();
+try {
+    // Comentários aprovados
+    $stmtCom = $pdo->prepare("
+        SELECT * FROM blog_comentarios
+        WHERE post_id = ? AND status = 'aprovado'
+        ORDER BY criado_em ASC
+    ");
+    $stmtCom->execute([$post['id']]);
+    $comentarios = $stmtCom->fetchAll();
+
+    // Posts relacionados (mesma categoria, exceto o atual)
+    if ($post['categoria_id']) {
+        $rel = $pdo->prepare("
+            SELECT id, titulo, slug, imagem_capa, publicado_em
+            FROM blog_posts
+            WHERE categoria_id = ? AND id != ?
+              AND (status = 'publicado' OR (status = 'agendado' AND publicado_em <= NOW()))
+            ORDER BY publicado_em DESC LIMIT 3
+        ");
+        $rel->execute([$post['categoria_id'], $post['id']]);
+        $relacionados = $rel->fetchAll();
+    }
+} catch (\PDOException $e) {
+    $comentarios = $relacionados = [];
+}
 
 // Msg de comentário enviado
 $msgComentario = $_GET['comentario'] ?? '';
-
-// Posts relacionados (mesma categoria, exceto o atual)
-$relacionados = [];
-if ($post['categoria_id']) {
-    $rel = $pdo->prepare("
-        SELECT id, titulo, slug, imagem_capa, publicado_em
-        FROM blog_posts
-        WHERE categoria_id = ? AND id != ?
-          AND (status = 'publicado' OR (status = 'agendado' AND publicado_em <= NOW()))
-        ORDER BY publicado_em DESC LIMIT 3
-    ");
-    $rel->execute([$post['categoria_id'], $post['id']]);
-    $relacionados = $rel->fetchAll();
-}
 
 $dataPost    = $post['publicado_em'] ?? $post['criado_em'];
 $autorExibir = $post['autor_nome'] ?: $post['autor_email'];
