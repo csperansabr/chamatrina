@@ -24,6 +24,21 @@ include __DIR__ . '/includes/layout-top.php';
         <p>A Fraternidade Essência da Chama Trina é um ponto de encontro entre espiritualidade e consciência — onde o desenvolvimento não é terceirizado, é construído com presença, disciplina e propósito.</p>
     </div>
 
+    <!-- Transparência Institucional / CNPJ -->
+    <div class="about" style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.07);">
+        <h3 style="font-size:15px;font-weight:700;letter-spacing:.03em;margin-bottom:10px;color:var(--violet-lite);">Transparência Institucional</h3>
+        <p style="margin-bottom:16px;">A Fraternidade Essência da Chama Trina está registrada no CNPJ sob o número <strong>55.343.450/0001-79</strong>. Consulte os dados cadastrais oficiais diretamente na base da Receita Federal:</p>
+
+        <button id="btn-cnpj" onclick="consultarCNPJ()"
+                style="display:inline-flex;align-items:center;gap:8px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.35);color:#a78bfa;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;">
+            <svg id="btn-cnpj-ico" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span id="btn-cnpj-txt">Consultar na Receita Federal</span>
+        </button>
+
+        <div id="cnpj-resultado" style="display:none;margin-top:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 22px;font-size:13px;line-height:1.7;color:#cbd5e1;">
+        </div>
+    </div>
+
     <div class="section">
         <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;">Esse caminho é para você se…</h2>
         <div class="list">
@@ -76,5 +91,113 @@ include __DIR__ . '/includes/layout-top.php';
 
     </div>
 </div>
+
+<script>
+(function () {
+    var consultado = false;
+
+    window.consultarCNPJ = function () {
+        if (consultado) {
+            var box = document.getElementById('cnpj-resultado');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            return;
+        }
+
+        var btn = document.getElementById('btn-cnpj');
+        var txt = document.getElementById('btn-cnpj-txt');
+        var ico = document.getElementById('btn-cnpj-ico');
+        var box = document.getElementById('cnpj-resultado');
+
+        txt.textContent = 'Consultando…';
+        btn.disabled    = true;
+        btn.style.opacity = '0.6';
+        ico.innerHTML   = '<circle cx="12" cy="12" r="9" stroke-dasharray="28 57" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".8s" repeatCount="indefinite"/></circle>';
+
+        fetch('<?= BASE_URL ?>/cnpj-consulta.php')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.erro) throw new Error(d.erro);
+                box.innerHTML = renderCNPJ(d);
+                box.style.display = 'block';
+                consultado = true;
+                txt.textContent  = 'Ocultar dados';
+                btn.disabled     = false;
+                btn.style.opacity = '1';
+                ico.innerHTML    = '<polyline points="20 6 9 17 4 12"/>';
+            })
+            .catch(function (e) {
+                box.innerHTML    = '<span style="color:#f87171;">⚠ ' + (e.message || 'Erro ao consultar. Tente novamente.') + '</span>';
+                box.style.display = 'block';
+                txt.textContent  = 'Tentar novamente';
+                btn.disabled     = false;
+                btn.style.opacity = '1';
+                ico.innerHTML    = '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>';
+            });
+    };
+
+    function fmt(v) { return v ? String(v).trim() : ''; }
+
+    function fmtCNPJ(c) {
+        c = String(c).replace(/\D/g, '').padStart(14, '0');
+        return c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    }
+
+    function fmtData(d) {
+        if (!d) return '—';
+        var m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return m ? m[3] + '/' + m[2] + '/' + m[1] : d;
+    }
+
+    function fmtEndereco(d) {
+        var partes = [];
+        if (d.logradouro) partes.push(fmt(d.logradouro) + (d.numero ? ', ' + fmt(d.numero) : ''));
+        if (d.complemento) partes.push(fmt(d.complemento));
+        if (d.bairro)      partes.push(fmt(d.bairro));
+        if (d.municipio)   partes.push(fmt(d.municipio) + (d.uf ? ' / ' + fmt(d.uf) : ''));
+        if (d.cep)         partes.push('CEP ' + String(d.cep).replace(/^(\d{5})(\d{3})$/, '$1-$2'));
+        return partes.join(' — ') || '—';
+    }
+
+    function renderCNPJ(d) {
+        var ativa   = d.descricao_situacao_cadastral && d.descricao_situacao_cadastral.toUpperCase().indexOf('ATIVA') !== -1;
+        var corSit  = ativa ? '#4ade80' : '#f87171';
+        var bgSit   = ativa ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)';
+        var brdSit  = ativa ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)';
+
+        var atv = (d.atividade_principal && d.atividade_principal.length)
+            ? d.atividade_principal[0].descricao
+            : '—';
+
+        var rows = [
+            ['Razão Social',    fmt(d.razao_social)  || '—'],
+            ['CNPJ',            fmtCNPJ(d.cnpj)],
+            ['Natureza Jurídica', fmt(d.natureza_juridica) || '—'],
+            ['Abertura',        fmtData(d.data_inicio_atividade)],
+            ['Atividade Principal', fmt(atv) || '—'],
+            ['Endereço',        fmtEndereco(d)],
+        ];
+
+        var html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">';
+        html    += '<span style="background:' + bgSit + ';color:' + corSit + ';border:1px solid ' + brdSit + ';padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;">';
+        html    += fmt(d.descricao_situacao_cadastral) || (ativa ? 'ATIVA' : 'INATIVA');
+        html    += '</span>';
+        if (d.data_situacao_cadastral) {
+            html += '<span style="color:#64748b;font-size:12px;">desde ' + fmtData(d.data_situacao_cadastral) + '</span>';
+        }
+        html += '</div>';
+
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px 24px;">';
+        rows.forEach(function (r) {
+            html += '<div><span style="display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">' + r[0] + '</span>';
+            html += '<span style="color:#e2e8f0;">' + r[1] + '</span></div>';
+        });
+        html += '</div>';
+
+        html += '<p style="margin-top:14px;font-size:11px;color:#475569;">Dados consultados em tempo real na base da Receita Federal via <a href="https://brasilapi.com.br" target="_blank" rel="noopener" style="color:#7c6aaa;">Brasil API</a>.</p>';
+
+        return html;
+    }
+})();
+</script>
 
 <?php include __DIR__ . '/includes/layout-bottom.php'; ?>
