@@ -31,9 +31,9 @@ $emTrabalhos  = in_array($current, $trabalhosPages);
         <li><a href="<?= BASE_URL ?>/eventos.php" class="<?= $current === 'eventos.php' ? 'active' : '' ?>">Agenda</a></li>
         <li><a href="<?= BASE_URL ?>/blog.php"    class="<?= $current === 'blog.php'    ? 'active' : '' ?>">Blog</a></li>
         <li><a href="<?= BASE_URL ?>/galeria.php" class="<?= $current === 'galeria.php' ? 'active' : '' ?>">Galeria</a></li>
+        <li><a href="https://irananatural.lojavirtualnuvem.com.br/" target="_blank" rel="noopener noreferrer">Loja</a></li>
         <li><a href="<?= BASE_URL ?>/contato.php" class="<?= $current === 'contato.php' ? 'active' : '' ?>">Contato</a></li>
-
-        <li><a href="<?= BASE_URL ?>/anamnese/" class="nav-ficha">Minha Ficha</a></li>
+                <li><a href="<?= BASE_URL ?>/anamnese/" class="nav-ficha">Minha Ficha</a></li>
     </ul>
 
 </div>

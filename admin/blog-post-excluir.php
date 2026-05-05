@@ -10,12 +10,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $id = (int)($_POST['id'] ?? 0);
 if ($id) {
-    $stmt = $pdo->prepare("SELECT imagem_capa FROM blog_posts WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT imagem_capa, imagem_thumb FROM blog_posts WHERE id = ?");
     $stmt->execute([$id]);
-    $imagem = $stmt->fetchColumn();
+    $row = $stmt->fetch();
 
-    if ($imagem && file_exists(__DIR__ . '/../' . $imagem)) {
-        unlink(__DIR__ . '/../' . $imagem);
+    foreach (['imagem_capa', 'imagem_thumb'] as $campo) {
+        if (!empty($row[$campo])) {
+            $path = __DIR__ . '/../' . $row[$campo];
+            if (file_exists($path)) unlink($path);
+        }
     }
 
     $pdo->prepare("DELETE FROM blog_posts WHERE id = ?")->execute([$id]);

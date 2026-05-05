@@ -47,7 +47,7 @@ As práticas com Medicinas da Floresta (Ayahuasca, Rapé, Tabaco, Sananga) são 
 | Linguagem backend | PHP 7+ (migrar para PHP 8 quando possível) |
 | Banco de dados | MySQL (disponível no HostGator) |
 | Frontend | HTML5, CSS3, JavaScript vanilla |
-| Formulários | Formspree (atual) → migrar para sistema próprio com MySQL |
+| Formulários | PHPMailer via SMTP HostGator (contato.php migrado do Formspree) |
 | Analytics | Google Analytics 4 (G-VDS7NJM3E4) |
 | Deploy | Servidor Apache no HostGator |
 
@@ -128,10 +128,11 @@ O logo é uma roda cromática completa com espiral central e brilho branco lumin
 ### Painel de Administração (`/admin/`)
 - Login protegido por senha (admin único, acesso total)
 - CRUD de eventos: criar, editar, excluir, arquivar
-- Campos por evento: título, categoria, data/hora, local, descrição, imagem de capa, vagas (opcional), status (ativo/inativo)
+- Campos por evento: título, categoria, data/hora de início, data/hora de término (opcional), local, descrição, imagem de capa, vagas (opcional), status (ativo/inativo/encerrado)
 - CRUD de cursos e atendimentos
 - Gerenciamento de posts do blog
 - Visualização e download das fichas de anamnese
+- Favicon presente em todas as páginas do painel (`/img/ico/favicon.ico`)
 
 ---
 
@@ -317,9 +318,10 @@ Informações atualizadas e aprovadas. Fotos em: `img/equipe/`.
 | Serviço | Uso | Chave/ID |
 |---|---|---|
 | Google Analytics | Rastreamento de visitas | G-VDS7NJM3E4 |
-| Formspree | Formulário de contato | xbdpjlbp |
+| PHPMailer (SMTP) | Formulário de contato + notificações + e-mails de conclusão | Configurado em `includes/mailer.php` |
 | WhatsApp Web API | Botão flutuante e links | +55 51 99256-3279 |
 | Instagram | Links no rodapé e header | Conforme `config.php` |
+| Loja externa | Link "Loja" no menu principal | irananatural.lojavirtualnuvem.com.br |
 
 ---
 
@@ -382,4 +384,216 @@ Informações atualizadas e aprovadas. Fotos em: `img/equipe/`.
 
 ---
 
-*Documento gerado em 2026-04-29. Revisar e atualizar conforme o projeto evolui.*
+---
+
+## 16. Funcionalidade — Atendimentos Online (Benzimento)
+
+**Implementado em:** 2026-05-04
+
+### 16.1 Visão geral
+
+Sistema completo de solicitação de atendimento online com foco em Benzimento. Permite ao visitante preencher um formulário no site, que registra a solicitação no banco de dados, notifica a equipe por e-mail e disponibiliza controle administrativo com rastreamento de status, alerta de pendências, limpeza automática de dados e monitoramento de rotinas.
+
+---
+
+### 16.2 Estrutura técnica
+
+#### Tabelas criadas
+
+| Tabela | Descrição |
+|---|---|
+| `atendimentos` | Registros de solicitações de atendimento online |
+| `atendimentos_log` | Log anônimo de atendimentos excluídos (LGPD) |
+| `rotinas_execucao` | Histórico de execução das rotinas automáticas |
+
+#### Campos — `atendimentos`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | INT PK | Identificador único |
+| `nome` | VARCHAR(255) | Nome completo do solicitante |
+| `email` | VARCHAR(255) | E-mail |
+| `whatsapp` | VARCHAR(30) | WhatsApp |
+| `data_nascimento` | DATE | Data de nascimento |
+| `nome_mae` | VARCHAR(255) | Nome da mãe |
+| `endereco` | TEXT | Endereço completo |
+| `tipo_atendimento` | VARCHAR(100) | Tipo (ex.: Benzimento) |
+| `intencao` | TEXT | Intenção / propósito |
+| `status` | ENUM | `pendente` ou `concluido` |
+| `data_solicitacao` | DATETIME | Timestamp automático |
+| `data_conclusao` | DATETIME | Preenchido ao concluir |
+| `msg_conclusao` | TEXT | Mensagem enviada ao solicitante no ato da conclusão |
+
+#### Campos — `atendimentos_log` (sem dados pessoais)
+
+| Campo | Tipo |
+|---|---|
+| `id` | INT PK |
+| `tipo_atendimento` | VARCHAR(100) |
+| `data_solicitacao` | DATETIME |
+| `data_conclusao` | DATETIME |
+| `data_exclusao` | DATETIME |
+
+#### Campos — `rotinas_execucao`
+
+| Campo | Tipo |
+|---|---|
+| `id` | INT PK |
+| `nome_rotina` | VARCHAR(100) |
+| `data_execucao` | DATETIME |
+| `status` | ENUM (`sucesso`, `erro`) |
+| `mensagem` | TEXT |
+
+---
+
+### 16.3 Fluxo do sistema
+
+```
+Visitante preenche benzimento.php
+    → POST para benzimento-enviar.php
+        → Valida dados (frontend + backend)
+        → Salva em atendimentos (status = pendente)
+        → Envia e-mail para contato@chamatrina.org.br
+        → Redireciona para benzimento.php?status=ok
+
+Admin acessa /admin/atendimentos.php
+    → Visualiza lista de atendimentos (filtro por status/busca)
+    → Coluna "Datas" exibe data de solicitação + data de conclusão (quando concluído)
+    → Botão "Concluir" na listagem envia mensagem padrão e conclui diretamente
+    → Acessa atendimento-ver.php?id=X para ver detalhes completos
+    → Formulário de conclusão exibe textarea pré-preenchida com mensagem padrão (editável)
+    → Clica "Enviar mensagem e concluir"
+        → atendimento-concluir.php envia e-mail HTML com logo ao solicitante
+        → Seta status=concluido + data_conclusao=NOW() + salva msg_conclusao
+
+Rotina diária (alerta-pendentes)
+    → Busca pendentes com data_solicitacao <= NOW() - 3 dias
+    → Envia e-mail de alerta se encontrar
+    → Registra em rotinas_execucao
+
+Rotina diária (limpeza-dados)
+    → Busca concluidos com data_conclusao <= NOW() - 90 dias
+    → Grava log anônimo em atendimentos_log
+    → Exclui registros originais (LGPD)
+    → Registra em rotinas_execucao
+
+Rotina diária (verificar-rotinas)
+    → Checa se alerta-pendentes e limpeza-dados rodaram nas últimas 24h
+    → Envia alerta se encontrar erro ou atraso
+    → Registra em rotinas_execucao
+```
+
+---
+
+### 16.4 Rotinas automáticas (cron jobs)
+
+Configurar no **cPanel → Cron Jobs** do HostGator:
+
+| Rotina | Arquivo | Horário sugerido | Comando |
+|---|---|---|---|
+| Alerta de pendentes | `cron/alerta-pendentes.php` | Diário às 08h | `0 8 * * * php /home/cleit467/public_html/cron/alerta-pendentes.php` |
+| Limpeza de dados | `cron/limpeza-dados.php` | Diário às 03h | `0 3 * * * php /home/cleit467/public_html/cron/limpeza-dados.php` |
+| Verificação de rotinas | `cron/verificar-rotinas.php` | Diário às 09h | `0 9 * * * php /home/cleit467/public_html/cron/verificar-rotinas.php` |
+| Encerrar eventos | `cron/encerrar-eventos.php` | A cada hora | `0 * * * * php /home/cleit467/public_html/cron/encerrar-eventos.php` |
+
+---
+
+### 16.5 Regras de negócio
+
+- Status possíveis: `pendente` → `concluido` (sem reversão)
+- Alerta de pendência: atendimentos com `status = pendente` e `data_solicitacao <= NOW() - 3 dias`
+- Retenção: atendimentos `concluido` com `data_conclusao <= NOW() - 90 dias` são excluídos automaticamente
+- Antes da exclusão, um log anônimo (sem dados pessoais) é gravado em `atendimentos_log`
+- Semáforo do dashboard: verde (tudo OK), amarelo (atraso ou nunca executada), vermelho (erro)
+- Conclusão: ao concluir, o admin envia obrigatoriamente uma mensagem ao solicitante via e-mail HTML com logo da Fraternidade
+- Mensagem padrão pré-preenchida no formulário de conclusão; pode ser editada antes do envio
+- `msg_conclusao` é salva na tabela para rastreabilidade
+
+---
+
+### 16.6 URLs / Rotas criadas
+
+| URL | Arquivo | Tipo | Descrição |
+|---|---|---|---|
+| `/benzimento.php` | `benzimento.php` | Público | Formulário de solicitação |
+| `/benzimento-enviar.php` | `benzimento-enviar.php` | POST interno | Processador do formulário |
+| `/politica-privacidade.php` | `politica-privacidade.php` | Público | Página de política de privacidade (LGPD) |
+| `/admin/atendimentos.php` | `admin/atendimentos.php` | Admin | Listagem de atendimentos |
+| `/admin/atendimento-ver.php` | `admin/atendimento-ver.php` | Admin | Detalhes de um atendimento |
+| `/admin/atendimento-concluir.php` | `admin/atendimento-concluir.php` | Admin POST | Marcar como concluído |
+| `/admin/rotinas.php` | `admin/rotinas.php` | Admin | Painel de monitoramento de rotinas |
+| `/setup_atendimentos.php` | `setup_atendimentos.php` | Instalação | Criar tabelas — **excluir após executar** |
+
+---
+
+### 16.7 Observações importantes
+
+- **Instalação:** Executar `setup_atendimentos.php` uma vez no servidor e deletar o arquivo em seguida
+- **Migração de coluna:** `setup_atendimentos.php` também adiciona `msg_conclusao` via `ALTER TABLE` para instâncias existentes
+- **Cron jobs:** Configurar os quatro jobs no cPanel. Sem eles, alertas e limpeza não ocorrem
+- **E-mail de destino:** Notificações de nova solicitação vão para `contato@chamatrina.org.br`; e-mail de conclusão vai para o e-mail do solicitante
+- **E-mail HTML:** O e-mail de conclusão é gerado em HTML com logo, gradiente roxo, saudação personalizada e assinatura. Inclui `AltBody` em texto puro como fallback
+- **LGPD:** O campo `lgpd_aceite` é obrigatório no formulário e validado no backend
+- **Semáforo:** Exibido no topo do dashboard admin; clicável para abrir `/admin/rotinas.php`
+- **Dependência:** Requer as tabelas criadas via `setup_atendimentos.php` antes de qualquer uso
+
+---
+
+---
+
+## 17. Funcionalidade — Data de Término de Eventos
+
+**Implementado em:** 2026-05-04
+
+### 17.1 Visão geral
+
+Campo `data_evento_fim` adicionado à tabela `eventos` para registrar a data e hora de encerramento de cada evento. O campo é opcional — quando ausente, o sistema usa `data_evento` (início) como referência para encerramento automático.
+
+### 17.2 Alterações no banco de dados
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `data_evento_fim` | DATETIME NULL | Data e hora de término do evento (opcional) |
+
+**Migração:** `setup.php` atualizado com `ADD COLUMN data_evento_fim ... AFTER data_evento` via `ALTER TABLE` com try/catch (não falha se a coluna já existir).
+
+### 17.3 Comportamento no painel admin
+
+- **`admin/evento-form.php`:** Campo "Data e horário de término" ao lado do campo de início. Vagas movido para a linha seguinte.
+- **`admin/eventos.php`:** Colunas "Início" e "Término" separadas na tabela de listagem. Exibe `—` quando sem data fim.
+- **`admin/evento-salvar.php`:** Recebe `data_evento_fim` do POST; armazena `null` quando vazio.
+
+### 17.4 Exibição pública (`eventos.php`)
+
+Exibição inteligente conforme o cenário:
+
+| Cenário | Exibição |
+|---|---|
+| Sem data fim | `15/06/2025 às 09:00h` |
+| Mesmo dia | `15/06/2025 das 09:00h às 17:00h` |
+| Dias diferentes | `15/06/2025 às 09:00h até 16/06/2025 às 12:00h` |
+
+### 17.5 Encerramento automático (cron)
+
+- **Arquivo:** `cron/encerrar-eventos.php`
+- **Frequência:** A cada hora (`0 * * * *`)
+- **Lógica:** Atualiza para `status = 'encerrado'` todos os eventos `ativo` onde:
+  - `data_evento_fim IS NOT NULL AND data_evento_fim < NOW()`, **ou**
+  - `data_evento_fim IS NULL AND data_evento < NOW()` (fallback)
+- **Monitoramento:** Incluída no `cron/verificar-rotinas.php` e no semáforo do dashboard (`admin/index.php`)
+
+### 17.6 Configuração do cron no cPanel
+
+```
+0 * * * *   php /home/cleit467/public_html/cron/encerrar-eventos.php
+```
+
+### 17.7 Observações
+
+- A migração de banco (`setup.php`) deve ser executada no servidor para adicionar a coluna em instâncias existentes
+- Eventos sem `data_evento_fim` continuam funcionando normalmente — o campo é totalmente opcional
+- O encerramento automático substitui a necessidade de alterar manualmente o status no painel
+
+---
+
+*Documento gerado em 2026-04-29. Última atualização: 2026-05-04.*

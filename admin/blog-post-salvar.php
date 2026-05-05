@@ -35,28 +35,39 @@ if ($checkSlug->fetch()) {
     $slug .= '-' . time();
 }
 
-// Upload de imagem
-$imagemCapa = null;
+// Lê imagens existentes (edição)
+$imagemCapa  = null;
+$imagemThumb = null;
 if ($id) {
-    $stmt = $pdo->prepare("SELECT imagem_capa FROM blog_posts WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT imagem_capa, imagem_thumb FROM blog_posts WHERE id = ?");
     $stmt->execute([$id]);
-    $imagemCapa = $stmt->fetchColumn();
+    $row = $stmt->fetch();
+    $imagemCapa  = $row['imagem_capa']  ?? null;
+    $imagemThumb = $row['imagem_thumb'] ?? null;
 }
 
+// Remove capa
 if (!empty($_POST['remover_imagem']) && $imagemCapa) {
     $path = __DIR__ . '/../' . $imagemCapa;
     if (file_exists($path)) unlink($path);
     $imagemCapa = null;
 }
 
+// Remove miniatura
+if (!empty($_POST['remover_thumb']) && $imagemThumb) {
+    $path = __DIR__ . '/../' . $imagemThumb;
+    if (file_exists($path)) unlink($path);
+    $imagemThumb = null;
+}
+
+// Upload capa (paisagem 16:9)
 if (!empty($_FILES['imagem_capa']['tmp_name'])) {
     $file = $_FILES['imagem_capa'];
     $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if (in_array($ext, ['jpg','jpeg','png','webp']) && $file['size'] <= 5 * 1024 * 1024) {
-        $nome = 'blog-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $nome = 'blog-capa-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
         $dest = __DIR__ . '/../img/blog/' . $nome;
         if (move_uploaded_file($file['tmp_name'], $dest)) {
-            // Remove imagem antiga
             if ($imagemCapa && file_exists(__DIR__ . '/../' . $imagemCapa)) {
                 unlink(__DIR__ . '/../' . $imagemCapa);
             }
@@ -65,25 +76,41 @@ if (!empty($_FILES['imagem_capa']['tmp_name'])) {
     }
 }
 
+// Upload miniatura (quadrado 1:1)
+if (!empty($_FILES['imagem_thumb']['tmp_name'])) {
+    $file = $_FILES['imagem_thumb'];
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (in_array($ext, ['jpg','jpeg','png','webp']) && $file['size'] <= 5 * 1024 * 1024) {
+        $nome = 'blog-thumb-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+        $dest = __DIR__ . '/../img/blog/' . $nome;
+        if (move_uploaded_file($file['tmp_name'], $dest)) {
+            if ($imagemThumb && file_exists(__DIR__ . '/../' . $imagemThumb)) {
+                unlink(__DIR__ . '/../' . $imagemThumb);
+            }
+            $imagemThumb = 'img/blog/' . $nome;
+        }
+    }
+}
+
 if ($id) {
     $stmt = $pdo->prepare("
         UPDATE blog_posts SET
             titulo = ?, slug = ?, resumo = ?, conteudo = ?,
-            imagem_capa = ?, categoria_id = ?, autor_id = ?,
+            imagem_capa = ?, imagem_thumb = ?, categoria_id = ?, autor_id = ?,
             status = ?, publicado_em = ?
         WHERE id = ?
     ");
     $stmt->execute([$titulo, $slug, $resumo, $conteudo,
-                    $imagemCapa, $catId, $autorId,
+                    $imagemCapa, $imagemThumb, $catId, $autorId,
                     $status, $publicadoEm, $id]);
 } else {
     $stmt = $pdo->prepare("
         INSERT INTO blog_posts
-            (titulo, slug, resumo, conteudo, imagem_capa, categoria_id, autor_id, status, publicado_em)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (titulo, slug, resumo, conteudo, imagem_capa, imagem_thumb, categoria_id, autor_id, status, publicado_em)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([$titulo, $slug, $resumo, $conteudo,
-                    $imagemCapa, $catId, $autorId,
+                    $imagemCapa, $imagemThumb, $catId, $autorId,
                     $status, $publicadoEm]);
 }
 

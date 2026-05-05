@@ -30,8 +30,9 @@ try {
         categoria_id  INT NOT NULL,
         titulo        VARCHAR(255) NOT NULL,
         descricao     TEXT,
-        data_evento   DATETIME NOT NULL,
-        local_nome    VARCHAR(255),
+        data_evento     DATETIME NOT NULL,
+        data_evento_fim DATETIME NULL,
+        local_nome      VARCHAR(255),
         local_endereco TEXT,
         imagem        VARCHAR(255),
         vagas         INT DEFAULT NULL,
@@ -43,6 +44,14 @@ try {
     $passos[] = '✔ Tabela <strong>eventos</strong> criada.';
 } catch (PDOException $e) {
     $erros[] = 'Erro em eventos: ' . $e->getMessage();
+}
+
+// Migração: adicionar data_evento_fim caso a tabela já existia antes desta versão
+try {
+    $pdo->exec("ALTER TABLE eventos ADD COLUMN data_evento_fim DATETIME NULL AFTER data_evento");
+    $passos[] = '✔ Coluna <strong>data_evento_fim</strong> adicionada.';
+} catch (PDOException $e) {
+    $passos[] = '✔ Coluna <strong>data_evento_fim</strong> já existia — nenhuma ação necessária.';
 }
 
 // Tabela de administradores

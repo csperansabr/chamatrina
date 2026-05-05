@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Projetos\\\\WebSite\\\\ChamaTrina\" -File)",
+      "Bash(Select-Object Name, Extension)",
+      "Bash(Sort-Object Name)",
+      "Bash(New-Item -ItemType Directory -Path \"c:\\\\Projetos\\\\WebSite\\\\ChamaTrina\\\\cron\" -Force)",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"ok\")"
+    ]
+  }
+}

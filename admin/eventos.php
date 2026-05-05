@@ -34,7 +34,8 @@ adminHeader('Eventos', 'eventos');
             <tr>
                 <th>Título</th>
                 <th>Categoria</th>
-                <th>Data</th>
+                <th>Início</th>
+                <th>Término</th>
                 <th>Status</th>
                 <th>Ações</th>
             </tr>
@@ -45,6 +46,9 @@ adminHeader('Eventos', 'eventos');
                 <td><?= htmlspecialchars($e['titulo']) ?></td>
                 <td><?= htmlspecialchars($e['categoria']) ?></td>
                 <td><?= date('d/m/Y H:i', strtotime($e['data_evento'])) ?></td>
+                <td style="color:#94a3b8;">
+                    <?= $e['data_evento_fim'] ? date('d/m/Y H:i', strtotime($e['data_evento_fim'])) : '—' ?>
+                </td>
                 <td><span class="badge badge-<?= $e['status'] ?>"><?= ucfirst($e['status']) ?></span></td>
                 <td style="display:flex;gap:8px;">
                     <a href="<?= BASE_URL ?>/admin/evento-form.php?id=<?= $e['id'] ?>"

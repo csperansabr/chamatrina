@@ -14,7 +14,7 @@ $categorias = [];
 $totalPosts = 0;
 $totalPags  = 1;
 
-$wherePost  = "status = 'publicado' OR (status = 'agendado' AND publicado_em <= NOW())";
+$wherePost  = "(status = 'publicado' OR (status = 'agendado' AND publicado_em <= NOW()))";
 $paramsPost = [];
 
 try {
@@ -100,8 +100,9 @@ include __DIR__ . '/includes/layout-top.php';
         <?php foreach ($posts as $post): ?>
         <article class="blog-card">
             <a href="<?= BASE_URL ?>/blog-post.php?slug=<?= urlencode($post['slug']) ?>" class="blog-card-img-link">
-                <?php if ($post['imagem_capa']): ?>
-                    <img src="<?= BASE_URL . '/' . htmlspecialchars($post['imagem_capa']) ?>"
+                <?php $cardImg = $post['imagem_thumb'] ?: $post['imagem_capa']; ?>
+                <?php if ($cardImg): ?>
+                    <img src="<?= BASE_URL . '/' . htmlspecialchars($cardImg) ?>"
                          alt="<?= htmlspecialchars($post['titulo']) ?>" class="blog-card-img">
                 <?php else: ?>
                     <div class="blog-card-img-placeholder"></div>

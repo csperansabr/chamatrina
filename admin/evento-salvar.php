@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $id          = isset($_POST['id']) ? (int) $_POST['id'] : 0;
 $titulo      = trim($_POST['titulo']        ?? '');
 $categoriaId = (int) ($_POST['categoria_id'] ?? 0);
-$dataEvento  = trim($_POST['data_evento']   ?? '');
+$dataEvento    = trim($_POST['data_evento']     ?? '');
+$dataEventoFim = trim($_POST['data_evento_fim'] ?? '') ?: null;
 $localNome   = trim($_POST['local_nome']    ?? '');
 $localEnd    = trim($_POST['local_endereco']?? '');
 $descricao   = trim($_POST['descricao']     ?? '');
@@ -50,29 +51,30 @@ if ($id) {
 
     $stmt = $pdo->prepare(
         "UPDATE eventos SET
-            categoria_id   = ?,
-            titulo         = ?,
-            descricao      = ?,
-            data_evento    = ?,
-            local_nome     = ?,
-            local_endereco = ?,
-            imagem         = ?,
-            vagas          = ?,
-            status         = ?
+            categoria_id    = ?,
+            titulo          = ?,
+            descricao       = ?,
+            data_evento     = ?,
+            data_evento_fim = ?,
+            local_nome      = ?,
+            local_endereco  = ?,
+            imagem          = ?,
+            vagas           = ?,
+            status          = ?
          WHERE id = ?"
     );
     $stmt->execute([
-        $categoriaId, $titulo, $descricao, $dataEvento,
+        $categoriaId, $titulo, $descricao, $dataEvento, $dataEventoFim,
         $localNome, $localEnd, $imagem, $vagas, $status, $id
     ]);
 } else {
     $stmt = $pdo->prepare(
         "INSERT INTO eventos
-            (categoria_id, titulo, descricao, data_evento, local_nome, local_endereco, imagem, vagas, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            (categoria_id, titulo, descricao, data_evento, data_evento_fim, local_nome, local_endereco, imagem, vagas, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $stmt->execute([
-        $categoriaId, $titulo, $descricao, $dataEvento,
+        $categoriaId, $titulo, $descricao, $dataEvento, $dataEventoFim,
         $localNome, $localEnd, $imagem, $vagas, $status
     ]);
 }

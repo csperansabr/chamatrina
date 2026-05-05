@@ -29,7 +29,8 @@ $catId       = $post['categoria_id'] ?? '';
 $autorId     = $post['autor_id']     ?? $adminAtual;
 $status      = $post['status']       ?? 'rascunho';
 $publicadoEm = $post['publicado_em'] ? date('Y-m-d\TH:i', strtotime($post['publicado_em'])) : '';
-$imagemAtual = $post['imagem_capa']  ?? '';
+$imagemAtual  = $post['imagem_capa']  ?? '';
+$thumbAtual   = $post['imagem_thumb'] ?? '';
 
 adminHeader($id ? 'Editar Post' : 'Novo Post', 'blog-posts');
 ?>
@@ -139,18 +140,41 @@ adminHeader($id ? 'Editar Post' : 'Novo Post', 'blog-posts');
             </div>
         </div>
 
-        <!-- Imagem de capa -->
+        <!-- Miniatura do card (1:1) -->
         <div class="form-group">
-            <label>Imagem de capa</label>
+            <label>Miniatura do card
+                <span style="color:#64748b;font-size:12px;">exibida na lista de posts — quadrado 1:1</span>
+            </label>
+            <?php if ($thumbAtual): ?>
+                <img src="<?= BASE_URL . '/' . htmlspecialchars($thumbAtual) ?>"
+                     style="display:block;width:140px;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8;cursor:pointer;margin-bottom:10px;">
+                    <input type="checkbox" name="remover_thumb" value="1"> Remover miniatura atual
+                </label>
+            <?php endif; ?>
+            <input type="file" name="imagem_thumb" accept="image/jpeg,image/png,image/webp">
+            <p style="font-size:12px;color:#64748b;margin-top:5px;">
+                JPG, PNG ou WebP · No ChatGPT: selecione <strong>Quadrado</strong> (1024×1024).<br>
+                Se não enviada, o card usará a capa como fallback.
+            </p>
+        </div>
+
+        <!-- Imagem de capa (16:9) -->
+        <div class="form-group">
+            <label>Capa do post
+                <span style="color:#64748b;font-size:12px;">exibida no topo do post completo — paisagem 16:9</span>
+            </label>
             <?php if ($imagemAtual): ?>
                 <img src="<?= BASE_URL . '/' . htmlspecialchars($imagemAtual) ?>"
-                     style="display:block;max-width:280px;border-radius:8px;margin-bottom:10px;">
+                     style="display:block;max-width:320px;border-radius:8px;margin-bottom:10px;">
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8;cursor:pointer;margin-bottom:10px;">
-                    <input type="checkbox" name="remover_imagem" value="1"> Remover imagem atual
+                    <input type="checkbox" name="remover_imagem" value="1"> Remover capa atual
                 </label>
             <?php endif; ?>
             <input type="file" name="imagem_capa" accept="image/jpeg,image/png,image/webp">
-            <p style="font-size:12px;color:#64748b;margin-top:5px;">JPG, PNG ou WebP. Tamanho ideal: 1200×630px.</p>
+            <p style="font-size:12px;color:#64748b;margin-top:5px;">
+                JPG, PNG ou WebP · No ChatGPT: selecione <strong>Paisagem</strong> (1792×1024).
+            </p>
         </div>
 
         <div class="form-actions">

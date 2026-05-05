@@ -26,6 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validações
     if (!$dados['nome'] || !$dados['email'] || !$dados['cpf'] || !$dados['nascimento'] || !$dados['senha']) {
         $erro = 'Preencha todos os campos obrigatórios.';
+    } elseif (empty($_POST['lgpd_aceite'])) {
+        $erro = 'É necessário aceitar a Política de Privacidade para criar sua conta.';
     } elseif (strlen($dados['cpf']) !== 11) {
         $erro = 'CPF inválido. Digite apenas os números.';
     } elseif ($dados['senha'] !== $dados['confirma']) {
@@ -122,7 +124,19 @@ include __DIR__ . '/../includes/layout-top.php';
                 <label>Confirmar senha *</label>
                 <input type="password" name="confirma" required minlength="8">
             </div>
-            <button type="submit" class="btn whatsapp" style="width:100%;justify-content:center;margin-top:5px;">
+            <div class="campo" style="margin-top:20px;">
+                <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-weight:normal;font-size:14px;color:var(--text);">
+                    <input type="checkbox" name="lgpd_aceite" required
+                           style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#25D366;">
+                    <span>
+                        Autorizo o uso dos meus dados pessoais e de saúde para fins de participação em cerimônias espirituais, conforme a
+                        <a href="<?= BASE_URL ?>/politica-privacidade.php" target="_blank"
+                           style="color:#25D366;text-decoration:underline;">Política de Privacidade</a>.
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn whatsapp" style="width:100%;justify-content:center;margin-top:16px;">
                 Criar conta
             </button>
         </form>

@@ -97,7 +97,19 @@ include __DIR__ . '/includes/layout-top.php';
                     <button class="evento-ver-mais" onclick="eventoToggle(this,'edesc-<?= $e['id'] ?>')">Ler mais ↓</button>
                     <?php endif; ?>
                     <div class="evento-card-meta">
-                        <span>📅 <?= date('d/m/Y', strtotime($e['data_evento'])) ?> às <?= date('H:i', strtotime($e['data_evento'])) ?>h</span>
+                        <span>📅
+                        <?php
+                        $dIni = strtotime($e['data_evento']);
+                        $dFim = $e['data_evento_fim'] ? strtotime($e['data_evento_fim']) : null;
+                        if ($dFim && date('Y-m-d', $dIni) === date('Y-m-d', $dFim)):
+                        ?>
+                            <?= date('d/m/Y', $dIni) ?> das <?= date('H:i', $dIni) ?>h às <?= date('H:i', $dFim) ?>h
+                        <?php elseif ($dFim): ?>
+                            <?= date('d/m/Y', $dIni) ?> às <?= date('H:i', $dIni) ?>h até <?= date('d/m/Y', $dFim) ?> às <?= date('H:i', $dFim) ?>h
+                        <?php else: ?>
+                            <?= date('d/m/Y', $dIni) ?> às <?= date('H:i', $dIni) ?>h
+                        <?php endif; ?>
+                        </span>
                         <?php if ($e['local_nome']): ?>
                         <span>📍 <?= htmlspecialchars($e['local_nome']) ?></span>
                         <?php endif; ?>

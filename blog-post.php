@@ -123,7 +123,41 @@ include __DIR__ . '/includes/layout-top.php';
            target="_blank" rel="noopener">WhatsApp</a>
         <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode($url) ?>"
            target="_blank" rel="noopener">Facebook</a>
+        <a href="#" id="btn-instagram-share"
+           onclick="compartilharInstagram(event)"
+           title="No celular abre o compartilhamento nativo; no computador copia o link">Instagram</a>
     </div>
+
+    <script>
+    (function () {
+        var postUrl   = <?= json_encode($url) ?>;
+        var postTitulo = <?= json_encode($post['titulo']) ?>;
+
+        window.compartilharInstagram = function (e) {
+            e.preventDefault();
+            var btn = document.getElementById('btn-instagram-share');
+
+            if (navigator.share) {
+                // Mobile: abre o compartilhamento nativo (Instagram, Stories, DM…)
+                navigator.share({ title: postTitulo, url: postUrl }).catch(function () {});
+            } else {
+                // Desktop: copia o link e confirma visualmente
+                navigator.clipboard.writeText(postUrl).then(function () {
+                    var orig = btn.textContent;
+                    btn.textContent = '✔ Link copiado!';
+                    btn.style.color = 'var(--emerald)';
+                    setTimeout(function () {
+                        btn.textContent = orig;
+                        btn.style.color = '';
+                    }, 2500);
+                }).catch(function () {
+                    // Fallback para navegadores muito antigos
+                    prompt('Copie o link para compartilhar no Instagram:', postUrl);
+                });
+            }
+        };
+    })();
+    </script>
 
     <!-- Comentários -->
     <section class="blog-comentarios" id="comentarios">
@@ -175,7 +209,13 @@ include __DIR__ . '/includes/layout-top.php';
                     <label>Comentário *</label>
                     <textarea name="comentario" required rows="5" placeholder="Escreva seu comentário…"></textarea>
                 </div>
-                <button type="submit" class="btn whatsapp" style="margin-top:16px;display:inline-flex;">
+                <p style="font-size:12px;color:#64748b;margin-top:16px;">
+                    Ao enviar, você concorda com nossa
+                    <a href="<?= BASE_URL ?>/politica-privacidade.php" target="_blank"
+                       style="color:var(--violet-lite);text-decoration:underline;">Política de Privacidade</a>.
+                    O e-mail não será exibido publicamente.
+                </p>
+                <button type="submit" class="btn whatsapp" style="margin-top:12px;display:inline-flex;">
                     Enviar comentário
                 </button>
             </form>

@@ -16,7 +16,7 @@ require_once __DIR__ . '/phpmailer/SMTP.php';
  * @param string $corpo    Corpo em texto puro
  * @return bool            true = enviado | false = falhou
  */
-function enviarEmail(string $para, string $nome, string $assunto, string $corpo): bool
+function enviarEmail(string $para, string $nome, string $assunto, string $corpo, bool $isHtml = false, string $altBody = ''): bool
 {
     $mail = new PHPMailer(true);
 
@@ -34,8 +34,11 @@ function enviarEmail(string $para, string $nome, string $assunto, string $corpo)
         $mail->addAddress($para, $nome);
 
         $mail->Subject = $assunto;
+        $mail->isHTML($isHtml);
         $mail->Body    = $corpo;
-        $mail->isHTML(false);
+        if ($isHtml && $altBody !== '') {
+            $mail->AltBody = $altBody;
+        }
 
         $mail->send();
         return true;

@@ -55,6 +55,17 @@ include __DIR__ . '/includes/layout-top.php';
                 </p>
             </div>
 
+            <div class="team-card">
+                <h3>Benzimento Online</h3>
+                <span>Cura e proteção à distância</span>
+                <p>
+                    Trabalho espiritual de cura, proteção e limpeza energética realizado à distância. Solicite pelo formulário online com seus dados e intenção — o benzimento é feito com amor e dedicação.
+                </p>
+                <a href="<?= BASE_URL ?>/benzimento.php" class="btn btn-ghost" style="margin-top:16px;display:inline-block;">
+                    Solicitar Benzimento
+                </a>
+            </div>
+
         </div>
     </div>
 

@@ -525,11 +525,14 @@ include __DIR__ . '/../includes/layout-top.php';
         <p>Declaro que sou maior de 18 anos, estou em pleno gozo das minhas faculdades mentais, e que venho participar por livre e espontânea vontade, responsabilizando-me pelas consequências de minha participação.</p>
         <p>Declaro ainda que <strong>todos os dados acima preenchidos são verdadeiros</strong> e autorizo a Fraternidade Essência da Chama Trina a utilizar fotografias e filmagens dos rituais, nos quais posso aparecer, para fins de divulgação espiritual e valorização das práticas sagradas.</p>
         <p>Estou ciente de que todas as medidas adotadas visam minha segurança e bem-estar.</p>
+        <p>Os dados pessoais e de saúde fornecidos nesta ficha são tratados com sigilo e utilizados exclusivamente para fins de participação nos trabalhos espirituais, conforme nossa
+            <a href="<?= BASE_URL ?>/politica-privacidade.php" target="_blank" style="color:var(--violet-lite);text-decoration:underline;">Política de Privacidade</a>.
+        </p>
     </div>
 
     <label class="checkbox-item anamnese-aceite">
         <input type="checkbox" name="aceite_termo" value="1" <?= !empty($f['aceite_termo']) ? 'checked' : '' ?> required>
-        <span>Li e aceito o Termo de Responsabilidade e Uso de Imagem acima.</span>
+        <span>Li e aceito o Termo de Responsabilidade, o Uso de Imagem e a Política de Privacidade acima.</span>
     </label>
 
     <div class="secao-nav" style="margin-top:30px;">

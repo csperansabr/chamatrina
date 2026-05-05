@@ -22,7 +22,8 @@ $categorias = $pdo->query("SELECT * FROM categorias_eventos ORDER BY ordem, nome
 
 $titulo   = $evento['titulo']        ?? '';
 $catId    = $evento['categoria_id']  ?? '';
-$data     = $evento['data_evento']   ? date('Y-m-d\TH:i', strtotime($evento['data_evento'])) : '';
+$data     = $evento['data_evento']     ? date('Y-m-d\TH:i', strtotime($evento['data_evento']))     : '';
+$dataFim  = $evento['data_evento_fim'] ? date('Y-m-d\TH:i', strtotime($evento['data_evento_fim'])) : '';
 $localN   = $evento['local_nome']    ?? '';
 $localE   = $evento['local_endereco']?? '';
 $desc     = $evento['descricao']     ?? '';
@@ -65,14 +66,22 @@ adminHeader($id ? 'Editar Evento' : 'Novo Evento', 'eventos');
 
         <div class="form-row">
             <div class="form-group">
-                <label>Data e horário *</label>
+                <label>Data e horário de início *</label>
                 <input type="datetime-local" name="data_evento" required value="<?= $data ?>">
             </div>
+            <div class="form-group">
+                <label>Data e horário de término</label>
+                <input type="datetime-local" name="data_evento_fim" value="<?= $dataFim ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
             <div class="form-group">
                 <label>Vagas (deixe em branco para ilimitado)</label>
                 <input type="number" name="vagas" min="1"
                        value="<?= htmlspecialchars($vagas) ?>">
             </div>
+            <div class="form-group"></div>
         </div>
 
         <div class="form-row">

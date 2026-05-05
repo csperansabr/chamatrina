@@ -12,6 +12,8 @@ function adminHeader(string $titulo, string $paginaAtiva = ''): void {
         'blog-categorias'  => ['label' => 'Blog — Categorias',  'url' => $base . '/admin/blog-categorias.php'],
         'blog-comentarios' => ['label' => 'Blog — Comentários', 'url' => $base . '/admin/blog-comentarios.php'],
         'anamneses'        => ['label' => 'Anamneses',          'url' => $base . '/admin/anamneses.php'],
+        'atendimentos'     => ['label' => 'Atendimentos',        'url' => $base . '/admin/atendimentos.php'],
+        'rotinas'          => ['label' => 'Rotinas',             'url' => $base . '/admin/rotinas.php'],
     ];
     ?>
 <!DOCTYPE html>
@@ -20,6 +22,9 @@ function adminHeader(string $titulo, string $paginaAtiva = ''): void {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= htmlspecialchars($titulo) ?> — Admin ChamaTrina</title>
+<link rel="icon" type="image/x-icon" href="/img/ico/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/ico/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/img/ico/favicon-16x16.png">
 <link rel="stylesheet" href="/admin/css/admin.css">
 </head>
 <body>
